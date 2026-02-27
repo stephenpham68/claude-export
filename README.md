@@ -151,8 +151,9 @@ Done. I added dark mode support by...
 
 1. Claude Code stores session data as JSONL files in `~/.claude/projects/`
 2. The scripts auto-detect your project by encoding the current working directory path
-3. They parse the JSONL, extract structured data, and format it for AI consumption
-4. No configuration needed - just run from your project root
+3. **Active session detection:** When no session ID is passed, the script reads the last entry's timestamp from each JSONL file (not file mtime) to find the currently-running session. This works reliably even with multiple parallel Claude Code sessions.
+4. They parse the JSONL, extract structured data, and format it for AI consumption
+5. No configuration needed - just run from your project root
 
 ## Requirements
 

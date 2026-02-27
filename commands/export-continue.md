@@ -19,7 +19,7 @@ The file will be saved to your Downloads folder as `claude-handoff_<timestamp>_<
 
 ## Options
 
-- No arguments: exports the most recent (current) session
+- No arguments: exports the active (current) session
 - `--list` or `-l`: show recent sessions to pick from
 - `<session-id>`: export a specific session by its UUID
 - `--output <dir>` or `-o <dir>`: save to a specific directory

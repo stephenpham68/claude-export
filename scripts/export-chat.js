@@ -613,6 +613,33 @@ function convertToMarkdown(entries, sessionId, opts) {
   return parts.join("\n");
 }
 
+// ── Active session detection ─────────────────────────────────────────
+/**
+ * Read the last entry's timestamp from a JSONL file.
+ * More reliable than file mtime for detecting the actively-running session,
+ * because when /export runs, the current session just wrote a tool_use entry.
+ */
+function getLastEntryTimestamp(filePath) {
+  try {
+    const stat = fs.statSync(filePath);
+    const readSize = Math.min(stat.size, 16384); // last 16KB
+    const buf = Buffer.alloc(readSize);
+    const fd = fs.openSync(filePath, "r");
+    fs.readSync(fd, buf, 0, readSize, Math.max(0, stat.size - readSize));
+    fs.closeSync(fd);
+    const lines = buf.toString("utf8").split("\n").filter((l) => l.trim());
+    for (let i = lines.length - 1; i >= 0; i--) {
+      try {
+        const entry = JSON.parse(lines[i]);
+        if (entry.timestamp) return new Date(entry.timestamp).getTime();
+      } catch {}
+    }
+    return stat.mtime.getTime(); // fallback
+  } catch {
+    return 0;
+  }
+}
+
 // ── Entry point ─────────────────────────────────────────────────────
 function main() {
   const opts = parseArgs();
@@ -633,14 +660,17 @@ function main() {
       sessionId = sessionId.replace(".jsonl", "");
     }
   } else {
+    // Sort by last entry timestamp (not file mtime) to detect the active session.
+    // When /export runs, Claude Code just wrote a tool_use to the current session's
+    // JSONL, so its last entry will always be the most recent.
     const files = fs
       .readdirSync(CLAUDE_PROJECT_DIR)
       .filter((f) => f.endsWith(".jsonl"))
-      .map((f) => ({
-        name: f,
-        mtime: fs.statSync(path.join(CLAUDE_PROJECT_DIR, f)).mtime,
-      }))
-      .sort((a, b) => b.mtime - a.mtime);
+      .map((f) => {
+        const fp = path.join(CLAUDE_PROJECT_DIR, f);
+        return { name: f, lastEntry: getLastEntryTimestamp(fp) };
+      })
+      .sort((a, b) => b.lastEntry - a.lastEntry);
 
     if (files.length === 0) {
       console.error("No session files found.");

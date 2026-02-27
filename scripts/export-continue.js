@@ -448,6 +448,28 @@ function listSessions(count = 15) {
   }
 }
 
+// ── Active session detection ─────────────────────────────────────────
+function getLastEntryTimestamp(filePath) {
+  try {
+    const stat = fs.statSync(filePath);
+    const readSize = Math.min(stat.size, 16384);
+    const buf = Buffer.alloc(readSize);
+    const fd = fs.openSync(filePath, "r");
+    fs.readSync(fd, buf, 0, readSize, Math.max(0, stat.size - readSize));
+    fs.closeSync(fd);
+    const lines = buf.toString("utf8").split("\n").filter((l) => l.trim());
+    for (let i = lines.length - 1; i >= 0; i--) {
+      try {
+        const entry = JSON.parse(lines[i]);
+        if (entry.timestamp) return new Date(entry.timestamp).getTime();
+      } catch {}
+    }
+    return stat.mtime.getTime();
+  } catch {
+    return 0;
+  }
+}
+
 // ── Main ────────────────────────────────────────────────────────────
 function main() {
   const opts = parseArgs();
@@ -468,8 +490,11 @@ function main() {
     const files = fs
       .readdirSync(CLAUDE_PROJECT_DIR)
       .filter((f) => f.endsWith(".jsonl"))
-      .map((f) => ({ name: f, mtime: fs.statSync(path.join(CLAUDE_PROJECT_DIR, f)).mtime }))
-      .sort((a, b) => b.mtime - a.mtime);
+      .map((f) => {
+        const fp = path.join(CLAUDE_PROJECT_DIR, f);
+        return { name: f, lastEntry: getLastEntryTimestamp(fp) };
+      })
+      .sort((a, b) => b.lastEntry - a.lastEntry);
 
     if (files.length === 0) { console.error("No session files found."); process.exit(1); }
     jsonlPath = path.join(CLAUDE_PROJECT_DIR, files[0].name);

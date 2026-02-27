@@ -16,7 +16,7 @@ The file will be saved to your Downloads folder as `claude-chat_<timestamp>_<ses
 
 ## Options
 
-- No arguments: exports the most recent (current) session
+- No arguments: exports the active (current) session
 - `--list` or `-l`: show recent sessions to pick from
 - `<session-id>`: export a specific session by its UUID
 - `--no-thinking`: exclude thinking/reasoning blocks
