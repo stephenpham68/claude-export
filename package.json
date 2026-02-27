@@ -1,0 +1,32 @@
+{
+  "name": "claude-export",
+  "version": "1.0.0",
+  "description": "Export Claude Code conversations for AI agent handoff and review",
+  "keywords": [
+    "claude-code",
+    "export",
+    "conversation",
+    "ai-agent",
+    "handoff",
+    "claude"
+  ],
+  "license": "MIT",
+  "author": "Stephen Pham",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stephenpham68/claude-export"
+  },
+  "bin": {
+    "claude-export": "install.js"
+  },
+  "files": [
+    "scripts/",
+    "commands/",
+    "install.js",
+    "CLAUDE.md",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
